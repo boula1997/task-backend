@@ -32,6 +32,7 @@ class TaskController extends Controller
             'title' => 'required|string',
             'due_date' => 'required|date',
             'assignee_email' => 'required|email',
+            'priority' => 'required',
         ]);
 
         $data=$request->all();
@@ -57,6 +58,8 @@ class TaskController extends Controller
             'title' => 'required|string',
             'due_date' => 'required|date',
             'assignee_email' => 'nullable|email',
+            'priority' => 'required',
+
         ]);
 
         if ($task->assignee_id != $request->user()->id) {
@@ -69,8 +72,12 @@ class TaskController extends Controller
 
         if($assignee)
             $data["assignee_id"]= $assignee->id;
-        else
-            return response()->json(['message' => 'Assignee email not found'], 404);
+        else{
+            if(isset($request->assignee_email))
+                return response()->json(['message' => 'Assignee email not found'], 404);
+            else
+                $data["assignee_id"]= $task->assignee_id;
+        }
 
 
         $task->update($data);
