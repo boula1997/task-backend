@@ -10,9 +10,9 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $tasks = Task::where('assignee_id', $request->user()->id)
+        $tasks = Task::where('assignee_id', auth('api')->user()->id)
             ->orderBy('due_date', 'asc')
             ->get();
 
