@@ -19,6 +19,13 @@ class TaskController extends Controller
         return response()->json($tasks);
     }
 
+    public function show($id)
+    {
+        $task = Task::find($id);
+
+        return response()->json($task);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
