@@ -12,7 +12,6 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
-        dd(500);
         $tasks = Task::where('assignee_id', $request->user()->id)
             ->orderBy('due_date', 'asc')
             ->get();
@@ -33,14 +32,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'Assignee email not found'], 404);
         }
 
-        $task = Task::create([
-            'creator_id' => $request->user()->id,
-            'assignee_id' => $assignee->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'due_date' => $request->due_date,
-            'priority' => $request->priority ?? 'medium',
-        ]);
+        $task = Task::create($request->all());
 
         return response()->json($task, 201);
     }
@@ -50,8 +42,7 @@ class TaskController extends Controller
         if ($task->assignee_id != $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-
-        $task->update($request->only('title','description','due_date','priority','is_completed'));
+        $task->update($request->all());
 
         return response()->json($task);
     }
