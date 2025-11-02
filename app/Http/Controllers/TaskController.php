@@ -34,12 +34,17 @@ class TaskController extends Controller
             'assignee_email' => 'required|email',
         ]);
 
+        $data=$request->all();
+
         $assignee = User::where('email', $request->assignee_email)->first();
+        $data["creator_id"]= auth('api')->user()->id;
+        $data["assignee_id"]= $assignee->id;
+
         if (!$assignee) {
             return response()->json(['message' => 'Assignee email not found'], 404);
         }
 
-        $task = Task::create($request->all());
+        $task = Task::create($data);
 
         return response()->json($task, 201);
     }
@@ -49,7 +54,16 @@ class TaskController extends Controller
         if ($task->assignee_id != $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        $task->update($request->all());
+
+        $data=$request->all();
+        if(isset($request->assignee_email)){
+
+            $assignee = User::where('email', $request->assignee_email)->first();
+            $data["assignee_id"]= $assignee->id;
+        }
+
+
+        $task->update($data);
 
         return response()->json($task);
     }
