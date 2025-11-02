@@ -35,14 +35,15 @@ class TaskController extends Controller
         ]);
 
         $data=$request->all();
+        $data["creator_id"]= auth('api')->user()->id;
 
         $assignee = User::where('email', $request->assignee_email)->first();
-        $data["creator_id"]= auth('api')->user()->id;
-        $data["assignee_id"]= $assignee->id;
 
-        if (!$assignee) {
+        if($assignee)
+            $data["assignee_id"]= $assignee->id;
+        else
             return response()->json(['message' => 'Assignee email not found'], 404);
-        }
+        
 
         $task = Task::create($data);
 
@@ -51,16 +52,25 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
+
+        $request->validate([
+            'title' => 'required|string',
+            'due_date' => 'required|date',
+            'assignee_email' => 'nullable|email',
+        ]);
+
         if ($task->assignee_id != $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $data=$request->all();
-        if(isset($request->assignee_email)){
 
-            $assignee = User::where('email', $request->assignee_email)->first();
+        $assignee = User::where('email', $request->assignee_email)->first();
+
+        if($assignee)
             $data["assignee_id"]= $assignee->id;
-        }
+        else
+            return response()->json(['message' => 'Assignee email not found'], 404);
 
 
         $task->update($data);
