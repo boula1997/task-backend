@@ -12,6 +12,7 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
+        dd(500);
         $tasks = Task::where('assignee_id', $request->user()->id)
             ->orderBy('due_date', 'asc')
             ->get();
