@@ -20,7 +20,7 @@ class TaskController extends Controller
     {
         $userId = auth('api')->user()->id;
 
-        // Get filters from query params
+        // Filters from query params
         $title = $request->query('title');
         $description = $request->query('description');
         $priority = $request->query('priority');
@@ -29,14 +29,16 @@ class TaskController extends Controller
         $dueTo = $request->query('dueTo');
         $perPage = $request->query('per_page', 1); // default 10 items per page
 
-        $tasksQuery = $this->tasks->queryForUser($userId); // your query builder
+        // Start with query builder, NOT get()
+        $tasksQuery = Task::query()->where('creator_id', $userId);
 
+        // Apply filters
         if ($title) {
-            $tasksQuery->where('title', 'like', "%$title%");
+            $tasksQuery->where('title', 'like', "%{$title}%");
         }
 
         if ($description) {
-            $tasksQuery->where('description', 'like', "%$description%");
+            $tasksQuery->where('description', 'like', "%{$description}%");
         }
 
         if ($priority) {
@@ -55,11 +57,12 @@ class TaskController extends Controller
             $tasksQuery->whereDate('due_date', '<=', $dueTo);
         }
 
-        // **Use paginate instead of get**
+        // Order and paginate
         $tasks = $tasksQuery->orderBy('due_date', 'asc')->paginate($perPage);
 
         return successResponse($tasks);
     }
+
 
 
 
