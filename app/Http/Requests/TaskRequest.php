@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 
 class TaskRequest extends FormRequest
 {
@@ -27,5 +29,14 @@ class TaskRequest extends FormRequest
             'assignee_email' => 'nullable|email',
             'priority' => 'required',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        $response = failedResponse($validator->errors());
+        throw new ValidationException($validator, $response);
     }
 }
