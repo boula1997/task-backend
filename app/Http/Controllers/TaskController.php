@@ -19,13 +19,16 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = $this->tasks->allForUser(auth('api')->user()->id);
-        return response()->json($tasks);
+        return successResponse($tasks);
     }
 
     public function show($id)
     {
         $task = $this->tasks->find($id);
-        return response()->json($task);
+        if (!$task) {
+            return failedResponse([], "Task not found", 404);
+        }
+        return successResponse($task);
     }
 
     public function store(TaskRequest $request)
@@ -35,33 +38,33 @@ class TaskController extends Controller
 
         try {
             $task = $this->tasks->create($data);
-            return response()->json($task, 201);
+            return successResponse($task, "Task created successfully", 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 404);
+            return failedResponse([], $e->getMessage(), 400);
         }
     }
 
     public function update(TaskRequest $request, Task $task)
     {
         if ($task->assignee_id != $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return failedResponse([], 'Forbidden', 403);
         }
 
         try {
             $updatedTask = $this->tasks->update($task, $request->all());
-            return response()->json($updatedTask);
+            return successResponse($updatedTask, "Task updated successfully");
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 404);
+            return failedResponse([], $e->getMessage(), 400);
         }
     }
 
     public function destroy(Request $request, Task $task)
     {
         if ($task->creator_id != $request->user()->id && $task->assignee_id != $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return failedResponse([], 'Forbidden', 403);
         }
 
         $this->tasks->delete($task);
-        return response()->json(['message' => 'Task deleted']);
+        return successResponse([], "Task deleted successfully");
     }
 }
