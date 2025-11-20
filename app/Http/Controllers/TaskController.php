@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Http\Request;
-
+use App\Repositories\Task\TaskRepositoryInterface;
 
 class TaskController extends Controller
 {
+    private $tasks;
+
+    public function __construct(TaskRepositoryInterface $tasks)
+    {
+        $this->tasks = $tasks;
+    }
+
     public function index()
     {
-        $tasks = Task::where('assignee_id', auth('api')->user()->id)
-            ->orderBy('due_date', 'asc')
-            ->get();
-
+        $tasks = $this->tasks->allForUser(auth('api')->user()->id);
         return response()->json($tasks);
     }
 
     public function show($id)
     {
-        $task = Task::find($id);
-
+        $task = $this->tasks->find($id);
         return response()->json($task);
     }
 
@@ -35,54 +36,36 @@ class TaskController extends Controller
             'priority' => 'required',
         ]);
 
-        $data=$request->all();
-        $data["creator_id"]= auth('api')->user()->id;
+        $data = $request->all();
+        $data['creator_id'] = auth('api')->user()->id;
 
-        $assignee = User::where('email', $request->assignee_email)->first();
-
-        if($assignee)
-            $data["assignee_id"]= $assignee->id;
-        else
-            return response()->json(['message' => 'Assignee email not found'], 404);
-        
-
-        $task = Task::create($data);
-
-        return response()->json($task, 201);
+        try {
+            $task = $this->tasks->create($data);
+            return response()->json($task, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        }
     }
 
     public function update(Request $request, Task $task)
     {
-
         $request->validate([
             'title' => 'required|string',
             'due_date' => 'required|date',
             'assignee_email' => 'nullable|email',
             'priority' => 'required',
-
         ]);
 
         if ($task->assignee_id != $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $data=$request->all();
-
-        $assignee = User::where('email', $request->assignee_email)->first();
-
-        if($assignee)
-            $data["assignee_id"]= $assignee->id;
-        else{
-            if(isset($request->assignee_email))
-                return response()->json(['message' => 'Assignee email not found'], 404);
-            else
-                $data["assignee_id"]= $task->assignee_id;
+        try {
+            $updatedTask = $this->tasks->update($task, $request->all());
+            return response()->json($updatedTask);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
         }
-
-
-        $task->update($data);
-
-        return response()->json($task);
     }
 
     public function destroy(Request $request, Task $task)
@@ -91,7 +74,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $task->delete();
+        $this->tasks->delete($task);
         return response()->json(['message' => 'Task deleted']);
     }
 }
