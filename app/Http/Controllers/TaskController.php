@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskRequest;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Repositories\Task\TaskRepositoryInterface;
@@ -27,15 +28,8 @@ class TaskController extends Controller
         return response()->json($task);
     }
 
-    public function store(Request $request)
+    public function store(TaskRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'due_date' => 'required|date',
-            'assignee_email' => 'required|email',
-            'priority' => 'required',
-        ]);
-
         $data = $request->all();
         $data['creator_id'] = auth('api')->user()->id;
 
@@ -47,15 +41,8 @@ class TaskController extends Controller
         }
     }
 
-    public function update(Request $request, Task $task)
+    public function update(TaskRequest $request, Task $task)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'due_date' => 'required|date',
-            'assignee_email' => 'nullable|email',
-            'priority' => 'required',
-        ]);
-
         if ($task->assignee_id != $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
