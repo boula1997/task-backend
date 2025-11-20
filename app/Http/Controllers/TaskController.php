@@ -16,52 +16,51 @@ class TaskController extends Controller
         $this->tasks = $tasks;
     }
 
-public function index(Request $request)
-{
-    $userId = auth('api')->user()->id;
+    public function index(Request $request)
+    {
+        $userId = auth('api')->user()->id;
 
-    // Get filters from query params
-    $title = $request->query('title');
-    $description = $request->query('description');
-    $priority = $request->query('priority');
-    $status = $request->query('status'); // "completed" or "incomplete"
-    $dueFrom = $request->query('dueFrom');
-    $dueTo = $request->query('dueTo');
+        // Get filters from query params
+        $title = $request->query('title');
+        $description = $request->query('description');
+        $priority = $request->query('priority');
+        $status = $request->query('status'); // "completed" or "incomplete"
+        $dueFrom = $request->query('dueFrom');
+        $dueTo = $request->query('dueTo');
+        $perPage = $request->query('per_page', 1); // default 10 items per page
 
-    $tasksQuery = $this->tasks->queryForUser($userId); // a query builder method in your repository
+        $tasksQuery = $this->tasks->queryForUser($userId); // your query builder
 
-    if ($title) {
-        $tasksQuery->where('title', 'like', "%$title%");
-    }
-
-    if ($description) {
-        $tasksQuery->where('description', 'like', "%$description%");
-    }
-
-    if ($priority) {
-        $tasksQuery->where('priority', $priority);
-    }
-
-    if ($status) {
-        if ($status === 'completed') {
-            $tasksQuery->where('is_completed', true);
-        } elseif ($status === 'incomplete') {
-            $tasksQuery->where('is_completed', false);
+        if ($title) {
+            $tasksQuery->where('title', 'like', "%$title%");
         }
+
+        if ($description) {
+            $tasksQuery->where('description', 'like', "%$description%");
+        }
+
+        if ($priority) {
+            $tasksQuery->where('priority', $priority);
+        }
+
+        if ($status) {
+            $tasksQuery->where('is_completed', $status === 'completed');
+        }
+
+        if ($dueFrom) {
+            $tasksQuery->whereDate('due_date', '>=', $dueFrom);
+        }
+
+        if ($dueTo) {
+            $tasksQuery->whereDate('due_date', '<=', $dueTo);
+        }
+
+        // **Use paginate instead of get**
+        $tasks = $tasksQuery->orderBy('due_date', 'asc')->paginate($perPage);
+
+        return successResponse($tasks);
     }
 
-    if ($dueFrom) {
-        $tasksQuery->whereDate('due_date', '>=', $dueFrom);
-    }
-
-    if ($dueTo) {
-        $tasksQuery->whereDate('due_date', '<=', $dueTo);
-    }
-
-    $tasks = $tasksQuery->get();
-
-    return successResponse($tasks);
-}
 
 
     public function show($id)
