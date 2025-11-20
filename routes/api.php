@@ -20,11 +20,11 @@ use App\Http\Controllers\TaskController;
 Route::post('/auth/signup', [AuthController::class, 'signup']);
 Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
 
-Route::get('/tasks', [TaskController::class, 'index']);
 // Protected routes
 Route::middleware(['auth:sanctum', 'api'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
+    Route::get('/tasks', [TaskController::class, 'index']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::post('/tasks/{task}', [TaskController::class, 'update']);
