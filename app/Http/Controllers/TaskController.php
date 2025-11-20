@@ -16,11 +16,53 @@ class TaskController extends Controller
         $this->tasks = $tasks;
     }
 
-    public function index()
-    {
-        $tasks = $this->tasks->allForUser(auth('api')->user()->id);
-        return successResponse($tasks);
+public function index(Request $request)
+{
+    $userId = auth('api')->user()->id;
+
+    // Get filters from query params
+    $title = $request->query('title');
+    $description = $request->query('description');
+    $priority = $request->query('priority');
+    $status = $request->query('status'); // "completed" or "incomplete"
+    $dueFrom = $request->query('dueFrom');
+    $dueTo = $request->query('dueTo');
+
+    $tasksQuery = $this->tasks->queryForUser($userId); // a query builder method in your repository
+
+    if ($title) {
+        $tasksQuery->where('title', 'like', "%$title%");
     }
+
+    if ($description) {
+        $tasksQuery->where('description', 'like', "%$description%");
+    }
+
+    if ($priority) {
+        $tasksQuery->where('priority', $priority);
+    }
+
+    if ($status) {
+        if ($status === 'completed') {
+            $tasksQuery->where('is_completed', true);
+        } elseif ($status === 'incomplete') {
+            $tasksQuery->where('is_completed', false);
+        }
+    }
+
+    if ($dueFrom) {
+        $tasksQuery->whereDate('due_date', '>=', $dueFrom);
+    }
+
+    if ($dueTo) {
+        $tasksQuery->whereDate('due_date', '<=', $dueTo);
+    }
+
+    $tasks = $tasksQuery->get();
+
+    return successResponse($tasks);
+}
+
 
     public function show($id)
     {

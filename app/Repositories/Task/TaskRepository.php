@@ -20,6 +20,11 @@ class TaskRepository implements TaskRepositoryInterface
         return Task::find($id);
     }
 
+    public function queryForUser($userId)
+{
+    return Task::where('assignee_id', $userId)->orWhere('creator_id', $userId);
+}
+
     public function create(array $data): Task
     {
         if (isset($data['assignee_email'])) {
