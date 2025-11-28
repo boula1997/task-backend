@@ -25,8 +25,8 @@ class TaskController extends Controller
         $description = $request->query('description');
         $priority = $request->query('priority');
         $status = $request->query('status'); // "completed" or "incomplete"
-        $dueFrom = $request->query('dueFrom');
-        $dueTo = $request->query('dueTo');
+        $dueFrom = $request->query('due_date_from');
+        $dueTo = $request->query('due_date_to');
         $perPage = $request->query('per_page', 10); // default 10 items per page
 
         // Start with query builder, NOT get()
@@ -46,7 +46,7 @@ class TaskController extends Controller
         }
 
         if ($status) {
-            $tasksQuery->where('is_completed', $status === 'completed');
+            $tasksQuery->where('is_completed', $status);
         }
 
         if ($dueFrom) {
@@ -90,10 +90,6 @@ class TaskController extends Controller
 
     public function update(TaskRequest $request, Task $task)
     {
-        if ($task->assignee_id != $request->user()->id) {
-            return failedResponse([], 'Forbidden', 403);
-        }
-
         try {
             $updatedTask = $this->tasks->update($task, $request->all());
             return successResponse($updatedTask, "Task updated successfully");
