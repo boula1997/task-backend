@@ -27,7 +27,7 @@ class TaskController extends Controller
         $status = $request->query('status'); // "completed" or "incomplete"
         $dueFrom = $request->query('dueFrom');
         $dueTo = $request->query('dueTo');
-        $perPage = $request->query('per_page', 1); // default 10 items per page
+        $perPage = $request->query('per_page', 10); // default 10 items per page
 
         // Start with query builder, NOT get()
         $tasksQuery = Task::query()->where('creator_id', $userId);
